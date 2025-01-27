@@ -1,93 +1,70 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { useInView, useMotionValue, useSpring } from "framer-motion";
+import { useInView, useMotionValue, useSpring } from "motion/react";
+import { type ComponentPropsWithoutRef, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 
-interface NumberTickerProps {
+interface NumberTickerProps extends ComponentPropsWithoutRef<"span"> {
   value: number;
   direction?: "up" | "down";
-  className?: string;
-  delay?: number;
+  delay?: number; // delay in seconds
   decimalPlaces?: number;
-  animationSpeed?: number;
 }
 
-export default function NumberTicker({
+export function NumberTicker({
   value,
   direction = "up",
   delay = 0,
   className,
   decimalPlaces = 0,
-  animationSpeed = 3000,
+  ...props
 }: NumberTickerProps) {
   const ref = useRef<HTMLSpanElement>(null);
-  const [displayValue, setDisplayValue] = useState<React.ReactNode>(null);
 
+  // Start from 'value' if direction is "down", otherwise from 0
   const motionValue = useMotionValue(direction === "down" ? value : 0);
+
+  // 1) Increase stiffness (200) => snappier / faster
+  // 2) Decrease damping (50) => less "resistance" so it converges quickly
+  // Feel free to adjust further as desired
   const springValue = useSpring(motionValue, {
-    damping: 60,
-    stiffness: 100,
+    stiffness: 200,
+    damping: 50,
   });
+
   const isInView = useInView(ref, { once: true, margin: "0px" });
 
+  // Trigger the animation when in view + delay
   useEffect(() => {
     if (isInView) {
       const timer = setTimeout(() => {
         motionValue.set(direction === "down" ? 0 : value);
       }, delay * 1000);
+
       return () => clearTimeout(timer);
     }
-  }, [motionValue, isInView, delay, value, direction]);
+  }, [isInView, delay, value, direction, motionValue]);
 
+  // Keep the <span> text in sync with the spring value
   useEffect(() => {
-    const unsubscribe = springValue.on("change", (latest) => {
-      const formattedNumber = Intl.NumberFormat("en-US", {
-        minimumFractionDigits: decimalPlaces,
-        maximumFractionDigits: decimalPlaces,
-      }).format(Number(latest.toFixed(decimalPlaces)));
-
-      const [integerPart, decimalPart] = formattedNumber.split(".");
-      const integerSegments = integerPart.split(",");
-
-      const integerElements = integerSegments.reduce<React.ReactNode[]>((acc, segment, idx) => {
-        if (idx === 0) {
-          return [segment];
-        } else {
-          return [
-            ...acc,
-            <span className="thousands-separator" key={`comma-${idx}`}>,</span>,
-            segment,
-          ];
-        }
-      }, []);
-
-      let finalElements: React.ReactNode[] = integerElements;
-      if (decimalPart && decimalPart.length > 0) {
-        finalElements = [
-          ...finalElements,
-          <span className="decimal-separator" key="decimal">.</span>,
-          decimalPart,
-        ];
+    return springValue.on("change", (latest) => {
+      if (ref.current) {
+        ref.current.textContent = Intl.NumberFormat("en-US", {
+          minimumFractionDigits: decimalPlaces,
+          maximumFractionDigits: decimalPlaces,
+        }).format(Number(latest.toFixed(decimalPlaces)));
       }
-
-      setDisplayValue(finalElements);
     });
-
-    return () => {
-      unsubscribe();
-    };
   }, [springValue, decimalPlaces]);
 
   return (
     <span
+      ref={ref}
       className={cn(
-        "inline-block tabular-nums text-black dark:text-white tracking-wider",
+        "inline-block tabular-nums tracking-wider text-black dark:text-white",
         className
       )}
-      ref={ref}
-    >
-      {displayValue}
-    </span>
+      {...props}
+    />
   );
 }

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Client, Databases, Query } from "appwrite"; // Use Appwrite JS SDK
 import { Slider } from "@/components/ui/slider"; // Import Slider from ShadCN UI
-import NumberTicker from "@/components/ui/number-ticker"; // Replace with your NumberTicker component path
+import {NumberTicker} from "@/components/ui/number-ticker"; // Replace with your NumberTicker component path
 
 const APPWRITE_ENDPOINT = process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!;
 const APPWRITE_PROJECT_ID = process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID!;

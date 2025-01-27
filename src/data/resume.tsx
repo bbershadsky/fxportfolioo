@@ -7,8 +7,8 @@ export const DATA = {
   url: "https://oligarch.ca",
   location: "San Francisco, CA",
   locationLink: "https://www.google.com/maps/place/sanfrancisco",
-  description: "Our journey to wealth",
-  avatarUrl: "/sponge.png",
+  description: "Shredding the gauntlet to wealth",
+  avatarUrl: "/logo.jpg",
   skills: [
     { asset: "BTC", percentage: 50 },
     { asset: "ETH", percentage: 40 },
